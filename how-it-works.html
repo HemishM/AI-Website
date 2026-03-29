@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How It Works — GroupSync</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Demo-specific styles */
+    .demo-panel {
+      background: #0d1526;
+      border: 1px solid #1a2a45;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .demo-tab {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .demo-tab.active {
+      color: #60a5fa;
+      border-bottom-color: #3b82f6;
+    }
+    .demo-step {
+      display: none;
+    }
+    .demo-step.active {
+      display: block;
+    }
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid #1a2a45;
+    }
+    .member-row:last-child {
+      border-bottom: none;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .alert-card {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .suggestion-card {
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== NAVIGATION ========== -->
+  <nav>
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 no-underline">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="4" r="2" fill="white"/>
+            <circle cx="3" cy="14" r="2" fill="white"/>
+            <circle cx="15" cy="14" r="2" fill="white"/>
+            <line x1="9" y1="6" x2="3" y2="12" stroke="white" stroke-width="1.5"/>
+            <line x1="9" y1="6" x2="15" y2="12" stroke="white" stroke-width="1.5"/>
+            <line x1="3" y1="14" x2="15" y2="14" stroke="white" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <span class="font-bold text-white text-lg">GroupSync</span>
+      </a>
+      <div class="desktop-nav flex items-center gap-8">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="how-it-works.html" class="nav-link active">How It Works</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+        <a href="index.html#signup" class="btn-primary" style="padding: 9px 20px; font-size: 14px;">Get Early Access</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== PAGE HEADER ========== -->
+  <section class="section hero-bg text-center">
+    <div class="max-w-3xl mx-auto px-6">
+      <span class="badge badge-blue mb-5">Interactive Demo</span>
+      <h1 class="text-4xl md:text-5xl font-black text-white mb-4">
+        See GroupSync<br/><span class="gradient-text">in action.</span>
+      </h1>
+      <p class="text-slate-400 text-lg leading-relaxed">
+        Walk through a real group project scenario below. This is a preview of the actual dashboard — no sign-up needed.
+      </p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========== STEP-BY-STEP PROCESS ========== -->
+  <section class="section">
+    <div class="max-w-6xl mx-auto px-6">
+      <h2 class="text-2xl font-bold text-white mb-10 text-center">How it works in 3 steps</h2>
+      <div class="grid md:grid-cols-3 gap-6 mb-16">
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style="background: rgba(59,130,246,0.15); color: #60a5fa;">1</div>
+            <span class="font-semibold text-white">Connect</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed">Share your Google Doc or file link with GroupSync. We read activity — not content. Your actual writing stays private.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style="background: rgba(139,92,246,0.15); color: #a78bfa;">2</div>
+            <span class="font-semibold text-white">Track</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed">GroupSync watches edit frequency, word contribution, session times, and participation — updating live as your team works.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style="background: rgba(59,130,246,0.15); color: #60a5fa;">3</div>
+            <span class="font-semibold text-white">Report</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed">Get a weekly summary, fairness alerts, and a one-click contribution report formatted for peer evaluations or professors.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========== INTERACTIVE DEMO ========== -->
+  <section class="section">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl font-bold text-white">Live Dashboard Preview</h2>
+        <p class="text-slate-500 text-sm mt-2">Click the tabs to explore each feature</p>
+      </div>
+
+      <div class="demo-panel">
+        <!-- Demo top bar -->
+        <div style="background: #080d1a; padding: 14px 20px; border-bottom: 1px solid #1a2a45;">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-white font-semibold text-sm">MKTG 352 — Final Group Project</p>
+              <p class="text-slate-500 text-xs">Due in 6 days · 4 members · Last sync: 2 minutes ago</p>
+            </div>
+            <span class="badge badge-blue">Live</span>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div style="border-bottom: 1px solid #1a2a45; display: flex; background: #080d1a;">
+          <button class="demo-tab active" onclick="showTab('contributions', this)">Contributions</button>
+          <button class="demo-tab" onclick="showTab('alerts', this)">Alerts</button>
+          <button class="demo-tab" onclick="showTab('suggestions', this)">AI Suggestions</button>
+          <button class="demo-tab" onclick="showTab('report', this)">Report</button>
+        </div>
+
+        <!-- Tab content -->
+        <div style="padding: 24px;">
+
+          <!-- TAB 1: Contributions -->
+          <div id="tab-contributions" class="demo-step active">
+            <p class="text-slate-400 text-xs mb-5">Contribution breakdown this week — based on edits, sessions, and activity time.</p>
+
+            <div class="member-row">
+              <div class="avatar" style="background: rgba(59,130,246,0.2); color: #60a5fa;">AJ</div>
+              <div style="flex:1;">
+                <div class="flex justify-between mb-1">
+                  <span class="text-white text-sm font-medium">Alex Johnson</span>
+                  <span class="text-blue-400 text-sm font-semibold">42%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 42%;"></div></div>
+                <p class="text-slate-500 text-xs mt-1">3.2h active · 1,840 words · 18 edits</p>
+              </div>
+            </div>
+
+            <div class="member-row">
+              <div class="avatar" style="background: rgba(139,92,246,0.2); color: #a78bfa;">SM</div>
+              <div style="flex:1;">
+                <div class="flex justify-between mb-1">
+                  <span class="text-white text-sm font-medium">Sara Mills</span>
+                  <span class="text-purple-400 text-sm font-semibold">31%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 31%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div></div>
+                <p class="text-slate-500 text-xs mt-1">2.1h active · 1,240 words · 11 edits</p>
+              </div>
+            </div>
+
+            <div class="member-row">
+              <div class="avatar" style="background: rgba(34,197,94,0.2); color: #4ade80;">JK</div>
+              <div style="flex:1;">
+                <div class="flex justify-between mb-1">
+                  <span class="text-white text-sm font-medium">Jamie Kim</span>
+                  <span class="text-green-400 text-sm font-semibold">22%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 22%; background: linear-gradient(90deg, #22c55e, #4ade80);"></div></div>
+                <p class="text-slate-500 text-xs mt-1">1.5h active · 890 words · 7 edits</p>
+              </div>
+            </div>
+
+            <div class="member-row">
+              <div class="avatar" style="background: rgba(239,68,68,0.2); color: #f87171;">TR</div>
+              <div style="flex:1;">
+                <div class="flex justify-between mb-1">
+                  <span class="text-white text-sm font-medium">Tyler Ross</span>
+                  <span class="text-red-400 text-sm font-semibold">5%</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 5%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+                <p class="text-slate-500 text-xs mt-1">0.2h active · 110 words · 1 edit · ⚠ Low activity</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Alerts -->
+          <div id="tab-alerts" class="demo-step">
+            <p class="text-slate-400 text-xs mb-5">GroupSync flagged the following issues this week.</p>
+            <div class="alert-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">🚨</span>
+                <div>
+                  <p class="text-red-300 font-semibold text-sm">Tyler Ross has barely contributed</p>
+                  <p class="text-slate-400 text-xs mt-1">Only 5% of total group work in the past 7 days. At current pace, the workload split will be 3:1 before the deadline.</p>
+                </div>
+              </div>
+            </div>
+            <div class="alert-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">⏰</span>
+                <div>
+                  <p class="text-red-300 font-semibold text-sm">Section 3 (Analysis) is 0% complete</p>
+                  <p class="text-slate-400 text-xs mt-1">This section is unassigned and unstarted. With 6 days remaining and 1,500 words required, it needs to start today.</p>
+                </div>
+              </div>
+            </div>
+            <div class="alert-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">📉</span>
+                <div>
+                  <p class="text-red-300 font-semibold text-sm">Overall progress is behind pace</p>
+                  <p class="text-slate-400 text-xs mt-1">Expected 60% completion by now. Currently at 38%. Recommend a check-in before Friday.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: AI Suggestions -->
+          <div id="tab-suggestions" class="demo-step">
+            <p class="text-slate-400 text-xs mb-5">Based on current activity, GroupSync recommends the following adjustments.</p>
+            <div class="suggestion-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">🔄</span>
+                <div>
+                  <p class="text-blue-300 font-semibold text-sm">Reassign Section 3 to Tyler Ross</p>
+                  <p class="text-slate-400 text-xs mt-1">Tyler's current contribution is the lowest. Assigning the Analysis section would bring the final split closer to 25/25/25/25.</p>
+                </div>
+              </div>
+            </div>
+            <div class="suggestion-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">🤝</span>
+                <div>
+                  <p class="text-blue-300 font-semibold text-sm">Schedule a 20-minute sync before Thursday</p>
+                  <p class="text-slate-400 text-xs mt-1">Groups with a mid-project check-in complete 34% more work in the final stretch. Use the meeting summary template to keep it focused.</p>
+                </div>
+              </div>
+            </div>
+            <div class="suggestion-card">
+              <div class="flex items-start gap-3">
+                <span style="font-size: 18px;">📋</span>
+                <div>
+                  <p class="text-blue-300 font-semibold text-sm">Break Section 4 into 3 smaller tasks</p>
+                  <p class="text-slate-400 text-xs mt-1">Sara and Jamie are near capacity. Splitting the Conclusions section into smaller chunks makes it easier to delegate without overwhelming anyone.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: Report -->
+          <div id="tab-report" class="demo-step">
+            <p class="text-slate-400 text-xs mb-5">Auto-generated contribution report — export as PDF to submit with peer evaluations.</p>
+            <div style="background: #080d1a; border: 1px solid #1a2a45; border-radius: 10px; padding: 20px; font-family: monospace; font-size: 12px; line-height: 1.8; color: #94a3b8;">
+              <p style="color: #e2e8f0; font-weight: bold;">CONTRIBUTION REPORT — MKTG 352 Final Project</p>
+              <p>Generated: Week of March 24, 2026</p>
+              <p style="color: #1a2a45;">─────────────────────────────────────</p>
+              <p style="color: #60a5fa;">Alex Johnson &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 42% &nbsp;| Lead contributor</p>
+              <p style="color: #a78bfa;">Sara Mills &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 31% &nbsp;| Strong contributor</p>
+              <p style="color: #4ade80;">Jamie Kim &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 22% &nbsp;| Active contributor</p>
+              <p style="color: #f87171;">Tyler Ross &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5% &nbsp;&nbsp;| ⚠ Below threshold</p>
+              <p style="color: #1a2a45;">─────────────────────────────────────</p>
+              <p>Total tracked sessions: 14</p>
+              <p>Total tracked edits: 37</p>
+              <p>Data sources: Google Doc, shared outline</p>
+              <p style="color: #1a2a45;">─────────────────────────────────────</p>
+              <p style="color: #64748b;">This report was auto-generated by GroupSync.</p>
+              <p style="color: #64748b;">groupsync.app · Data verified · Tamper-proof</p>
+            </div>
+            <div class="mt-4 flex gap-3">
+              <button class="btn-primary" style="font-size: 13px; padding: 10px 20px;" onclick="alert('Export will be available in the live product!')">Export as PDF</button>
+              <button class="btn-ghost" style="font-size: 13px; padding: 10px 20px;" onclick="alert('Share link will be available in the live product!')">Share with Professor</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="text-center text-slate-600 text-xs mt-4">This is a static demo. The live product will connect to your actual documents.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========== CTA ========== -->
+  <section class="section text-center">
+    <div class="max-w-2xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-white mb-4">Want this for your next group project?</h2>
+      <p class="text-slate-400 mb-8">Join the waitlist and be first to know when GroupSync launches.</p>
+      <a href="index.html#signup" class="btn-primary">Get Early Access — It's Free</a>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="py-10">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <a href="index.html" class="flex items-center gap-2 no-underline">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="4" r="2" fill="white"/>
+            <circle cx="3" cy="14" r="2" fill="white"/>
+            <circle cx="15" cy="14" r="2" fill="white"/>
+            <line x1="9" y1="6" x2="3" y2="12" stroke="white" stroke-width="1.5"/>
+            <line x1="9" y1="6" x2="15" y2="12" stroke="white" stroke-width="1.5"/>
+            <line x1="3" y1="14" x2="15" y2="14" stroke="white" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <span class="font-bold text-white">GroupSync</span>
+      </a>
+      <div class="flex gap-6">
+        <a href="index.html" class="nav-link text-xs">Home</a>
+        <a href="about.html" class="nav-link text-xs">About</a>
+        <a href="how-it-works.html" class="nav-link text-xs">How It Works</a>
+        <a href="contact.html" class="nav-link text-xs">Contact</a>
+      </div>
+      <!-- REPLACE: Update with your name -->
+      <p class="text-slate-600 text-xs">© 2026 GroupSync. Built by [YOUR_NAME].</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching for interactive demo
+    function showTab(tabName, clickedBtn) {
+      // Hide all steps
+      document.querySelectorAll('.demo-step').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.demo-tab').forEach(el => el.classList.remove('active'));
+      // Show selected
+      document.getElementById('tab-' + tabName).classList.add('active');
+      clickedBtn.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
