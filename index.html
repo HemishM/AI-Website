@@ -335,7 +335,7 @@
       const email = document.getElementById('form-email').value.trim();
 
       try {
-        const { error } = await supabase
+        const { error } = await dbClient
           .from('waitlist')   // REPLACE: change table name if different
           .insert([{ name, email }]);
 

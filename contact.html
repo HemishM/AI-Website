@@ -205,7 +205,7 @@
       const message = document.getElementById('contact-message').value.trim();
 
       try {
-        const { error } = await supabase
+        const { error } = await dbClient
           .from('contact_messages')   // REPLACE: change table name if different
           .insert([{ name, email, subject, message }]);
 
