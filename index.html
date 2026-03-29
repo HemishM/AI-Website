@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- REPLACE: Update the title with your product name -->
-  <title>GroupSync — AI-Powered Group Project Accountability</title>
+  <title>CollabrAI — AI-Powered Group Project Accountability</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -26,8 +26,8 @@
             <line x1="3" y1="14" x2="15" y2="14" stroke="white" stroke-width="1.5"/>
           </svg>
         </div>
-        <!-- REPLACE: Change "GroupSync" to your product name everywhere on this page -->
-        <span class="font-bold text-white text-lg">GroupSync</span>
+        <!-- REPLACE: Change "CollabrAI" to your product name everywhere on this page -->
+        <span class="font-bold text-white text-lg">CollabrAI</span>
       </a>
       <!-- Desktop nav links -->
       <div class="desktop-nav flex items-center gap-8">
@@ -51,7 +51,7 @@
         <span class="gradient-text">Your Entire Group.</span>
       </h1>
       <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-        GroupSync connects to your shared docs and automatically tracks who is contributing, how much,
+        CollabrAI connects to your shared docs and automatically tracks who is contributing, how much,
         and when — so you never have to guess, confront, or carry the team alone.
       </p>
       <!-- Email capture form -->
@@ -63,7 +63,7 @@
           <button type="submit" class="btn-primary w-full text-center">Get Early Access — It's Free</button>
         </form>
         <div id="confirm-msg">
-          You're on the list! We'll reach out as soon as GroupSync is ready.
+          You're on the list! We'll reach out as soon as CollabrAI is ready.
         </div>
         <p class="text-slate-600 text-xs mt-3">No spam. No credit card. Just early access.</p>
       </div>
@@ -78,7 +78,7 @@
       <div class="text-center mb-14">
         <span class="badge badge-blue mb-4">Sound Familiar?</span>
         <h2 class="text-3xl md:text-4xl font-bold text-white">Group projects are broken.</h2>
-        <p class="text-slate-400 mt-3 max-w-xl mx-auto">Same problems, every semester. GroupSync fixes all of them.</p>
+        <p class="text-slate-400 mt-3 max-w-xl mx-auto">Same problems, every semester. CollabrAI fixes all of them.</p>
       </div>
       <div class="grid md:grid-cols-3 gap-6">
         <div class="card">
@@ -123,7 +123,7 @@
             <span class="text-purple-400 font-bold text-lg">2</span>
           </div>
           <h3 class="font-bold text-white mb-2">AI Tracks Everything</h3>
-          <p class="text-slate-400 text-sm leading-relaxed">GroupSync monitors edits, participation, and progress — no manual input needed from your team.</p>
+          <p class="text-slate-400 text-sm leading-relaxed">CollabrAI monitors edits, participation, and progress — no manual input needed from your team.</p>
         </div>
         <div class="card text-center">
           <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style="background: rgba(59,130,246,0.15);">
@@ -148,6 +148,24 @@
         <span class="badge badge-blue mb-4">Pricing</span>
         <h2 class="text-3xl md:text-4xl font-bold text-white">Built for students. Scaled for classrooms.</h2>
         <p class="text-slate-400 mt-3">Start free. Upgrade when you need more.</p>
+        <!-- Monthly / Yearly toggle -->
+        <div class="flex items-center justify-center gap-3 mt-6">
+          <span id="label-monthly" class="text-white text-sm font-medium">Monthly</span>
+          <button id="billing-toggle" onclick="toggleBilling()" style="
+            width: 48px; height: 26px; border-radius: 100px;
+            background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+            border: none; cursor: pointer; position: relative; transition: background 0.2s;
+          ">
+            <span id="toggle-knob" style="
+              position: absolute; top: 3px; left: 3px;
+              width: 20px; height: 20px; border-radius: 50%;
+              background: white; transition: transform 0.2s;
+            "></span>
+          </button>
+          <span id="label-yearly" class="text-slate-400 text-sm font-medium">
+            Yearly <span style="background: rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.25); border-radius:100px; padding: 2px 8px; font-size:11px; font-weight:600;">Save ~17%</span>
+          </span>
+        </div>
       </div>
       <div class="grid md:grid-cols-3 gap-8">
 
@@ -182,9 +200,10 @@
             <span class="badge" style="background: linear-gradient(135deg,#3b82f6,#8b5cf6); color:white; border:none;">Most Popular</span>
           </div>
           <div class="badge badge-blue mb-4">Classroom</div>
-          <!-- REPLACE: Set your actual price here -->
-          <div class="text-3xl font-black text-white mb-1">$29<span class="text-lg font-normal text-slate-400">/mo</span></div>
-          <p class="text-slate-500 text-sm mb-6">Per professor, unlimited groups</p>
+          <div class="text-3xl font-black text-white mb-1">
+            <span id="price-classroom">$25</span><span class="text-lg font-normal text-slate-400" id="period-classroom">/mo</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-6" id="desc-classroom">Per professor, unlimited groups</p>
           <ul class="space-y-3 mb-8">
             <li class="flex items-start gap-2 text-sm text-slate-300">
               <span class="text-blue-400 mt-0.5">✓</span> Everything in Student tier
@@ -211,9 +230,10 @@
         <!-- Tier 3: Business -->
         <div class="pricing-card">
           <div class="badge badge-blue mb-4">Business</div>
-          <!-- REPLACE: Set your actual price here -->
-          <div class="text-3xl font-black text-white mb-1">$79<span class="text-lg font-normal text-slate-400">/mo</span></div>
-          <p class="text-slate-500 text-sm mb-6">For small teams and startups</p>
+          <div class="text-3xl font-black text-white mb-1">
+            <span id="price-business">$50</span><span class="text-lg font-normal text-slate-400" id="period-business">/mo</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-6" id="desc-business">For small teams and startups</p>
           <ul class="space-y-3 mb-8">
             <li class="flex items-start gap-2 text-sm text-slate-300">
               <span class="text-blue-400 mt-0.5">✓</span> Everything in Classroom tier
@@ -256,7 +276,7 @@
             <line x1="3" y1="14" x2="15" y2="14" stroke="white" stroke-width="1.5"/>
           </svg>
         </div>
-        <span class="font-bold text-white">GroupSync</span>
+        <span class="font-bold text-white">CollabrAI</span>
       </a>
       <div class="flex gap-6">
         <a href="index.html" class="nav-link text-xs">Home</a>
@@ -265,11 +285,39 @@
         <a href="contact.html" class="nav-link text-xs">Contact</a>
       </div>
       <!-- REPLACE: Update with your name/year -->
-      <p class="text-slate-600 text-xs">© 2026 GroupSync. Built by [YOUR_NAME].</p>
+      <p class="text-slate-600 text-xs">© 2026 CollabrAI. Built by [YOUR_NAME].</p>
     </div>
   </footer>
 
   <!-- Supabase CDN -->
+  <script>
+    let isYearly = false;
+    function toggleBilling() {
+      isYearly = !isYearly;
+      const knob = document.getElementById('toggle-knob');
+      knob.style.transform = isYearly ? 'translateX(22px)' : 'translateX(0)';
+
+      if (isYearly) {
+        document.getElementById('price-classroom').textContent = '$250';
+        document.getElementById('period-classroom').textContent = '/yr';
+        document.getElementById('desc-classroom').textContent = 'Per professor — 2 months free';
+        document.getElementById('price-business').textContent = '$500';
+        document.getElementById('period-business').textContent = '/yr';
+        document.getElementById('desc-business').textContent = 'For small teams — 2 months free';
+        document.getElementById('label-yearly').style.color = '#f1f5f9';
+        document.getElementById('label-monthly').style.color = '#64748b';
+      } else {
+        document.getElementById('price-classroom').textContent = '$25';
+        document.getElementById('period-classroom').textContent = '/mo';
+        document.getElementById('desc-classroom').textContent = 'Per professor, unlimited groups';
+        document.getElementById('price-business').textContent = '$50';
+        document.getElementById('period-business').textContent = '/mo';
+        document.getElementById('desc-business').textContent = 'For small teams and startups';
+        document.getElementById('label-monthly').style.color = '#f1f5f9';
+        document.getElementById('label-yearly').style.color = '#64748b';
+      }
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script>
