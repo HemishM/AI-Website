@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — CollabrAI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: #0d1526;
+      border-right: 1px solid #1a2a45;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      z-index: 50;
+    }
+    .main-content {
+      margin-left: 240px;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: #f1f5f9;
+      background: rgba(255,255,255,0.03);
+    }
+    .sidebar-link.active {
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+      background: rgba(59,130,246,0.06);
+    }
+    .top-bar {
+      background: rgba(8,13,26,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1a2a45;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .project-card {
+      background: #0d1526;
+      border: 1px solid #1a2a45;
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+    .project-card:hover {
+      border-color: #2a3f63;
+      transform: translateY(-2px);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal {
+      background: #0d1526;
+      border: 1px solid #1a2a45;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 px-5 mb-8">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="4" r="2" fill="white"/>
+          <circle cx="3" cy="14" r="2" fill="white"/>
+          <circle cx="15" cy="14" r="2" fill="white"/>
+          <line x1="9" y1="6" x2="3" y2="12" stroke="white" stroke-width="1.5"/>
+          <line x1="9" y1="6" x2="15" y2="12" stroke="white" stroke-width="1.5"/>
+          <line x1="3" y1="14" x2="15" y2="14" stroke="white" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <span class="font-bold text-white">CollabrAI</span>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="flex flex-col gap-1 flex-1">
+      <a href="dashboard.html" class="sidebar-link active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Projects
+      </a>
+      <a href="settings.html" class="sidebar-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <!-- User info + sign out -->
+    <div style="border-top: 1px solid #1a2a45; padding: 16px 20px; margin-top: auto;">
+      <div class="flex items-center gap-3 mb-3">
+        <div id="user-avatar" style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; flex-shrink:0;">?</div>
+        <div style="overflow:hidden;">
+          <p id="user-name" class="text-white text-xs font-semibold truncate">Loading...</p>
+          <p id="user-email" class="text-slate-500 text-xs truncate">...</p>
+        </div>
+      </div>
+      <button onclick="signOut()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#64748b'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="main-content">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <h1 class="text-white font-bold text-lg">My Projects</h1>
+      <button onclick="openModal('create-modal')" class="btn-primary" style="font-size:13px; padding:9px 18px;">+ New Project</button>
+    </div>
+
+    <!-- Page body -->
+    <div style="padding: 32px;">
+
+      <!-- Connected accounts notice (shown if Google not connected) -->
+      <div id="connect-notice" style="display:none;" class="card mb-6" style="padding:16px;">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span style="font-size:20px;">⚠️</span>
+            <div>
+              <p class="text-white font-semibold text-sm">Connect Google to start tracking</p>
+              <p class="text-slate-500 text-xs">CollabrAI needs access to your Google Docs to track contributions.</p>
+            </div>
+          </div>
+          <a href="settings.html" class="btn-primary" style="font-size:12px; padding:8px 14px; white-space:nowrap;">Connect Google</a>
+        </div>
+      </div>
+
+      <!-- Projects grid -->
+      <div id="projects-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="empty-state" style="display:none;">
+        <div style="font-size:48px; margin-bottom:16px;">📂</div>
+        <h2 class="text-white font-bold text-xl mb-2">No projects yet</h2>
+        <p class="text-slate-400 text-sm mb-6">Create your first project to start tracking group contributions.</p>
+        <button onclick="openModal('create-modal')" class="btn-primary">+ Create your first project</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== CREATE PROJECT MODAL ===== -->
+  <div id="create-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'create-modal')">
+    <div class="modal">
+      <h2 class="text-xl font-bold text-white mb-1">New Project</h2>
+      <p class="text-slate-400 text-sm mb-6">Create a group project to start tracking contributions.</p>
+      <form id="create-form" class="flex flex-col gap-4">
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Project name</label>
+          <input type="text" id="proj-name" class="form-input" placeholder="e.g. MKTG 352 Final Project" required />
+        </div>
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Course / Team name (optional)</label>
+          <input type="text" id="proj-course" class="form-input" placeholder="e.g. Marketing 352" />
+        </div>
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Deadline</label>
+          <input type="date" id="proj-deadline" class="form-input" />
+        </div>
+        <div class="flex gap-3 mt-2">
+          <button type="button" onclick="closeModal('create-modal')" class="btn-ghost" style="flex:1;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;">Create Project</button>
+        </div>
+      </form>
+      <div id="create-error" style="display:none; color:#f87171; font-size:13px; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await dbClient.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = session.user;
+
+      // Load profile
+      const { data: profile } = await dbClient
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!profile || !profile.onboarded) {
+        window.location.href = 'onboarding.html';
+        return;
+      }
+
+      // Set user info in sidebar
+      const name = profile.full_name || currentUser.email.split('@')[0];
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-email').textContent = currentUser.email;
+      document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+
+      // Show connect notice if Google not connected
+      if (!profile.google_connected) {
+        document.getElementById('connect-notice').style.display = 'block';
+      }
+
+      loadProjects();
+    }
+
+    async function loadProjects() {
+      const { data: projects, error } = await dbClient
+        .from('projects')
+        .select('*')
+        .eq('owner_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      const grid = document.getElementById('projects-grid');
+      const empty = document.getElementById('empty-state');
+
+      if (!projects || projects.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.style.display = 'grid';
+      grid.innerHTML = projects.map(p => projectCard(p)).join('');
+    }
+
+    function projectCard(p) {
+      const deadline = p.deadline ? new Date(p.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline set';
+      const daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+      const urgency = daysLeft !== null ? (daysLeft <= 3 ? '#f87171' : daysLeft <= 7 ? '#fbbf24' : '#4ade80') : '#64748b';
+
+      return `
+        <div class="project-card" onclick="window.location.href='project.html?id=${p.id}'">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="text-white font-bold text-base">${p.name}</h3>
+              ${p.course ? `<p class="text-slate-500 text-xs mt-0.5">${p.course}</p>` : ''}
+            </div>
+            <span style="width:8px; height:8px; border-radius:50%; background:${urgency}; margin-top:6px; flex-shrink:0;"></span>
+          </div>
+          <div class="flex items-center gap-2 mt-4">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="text-slate-500 text-xs">${deadline}</span>
+            ${daysLeft !== null ? `<span style="color:${urgency}; font-size:11px; font-weight:600;">${daysLeft > 0 ? `${daysLeft}d left` : 'Past due'}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Create project form
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name     = document.getElementById('proj-name').value.trim();
+      const course   = document.getElementById('proj-course').value.trim();
+      const deadline = document.getElementById('proj-deadline').value;
+
+      const { data, error } = await dbClient
+        .from('projects')
+        .insert([{
+          owner_id: currentUser.id,
+          name,
+          course: course || null,
+          deadline: deadline || null,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        document.getElementById('create-error').textContent = error.message;
+        document.getElementById('create-error').style.display = 'block';
+        return;
+      }
+
+      closeModal('create-modal');
+      window.location.href = `project.html?id=${data.id}`;
+    });
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+    function closeModalOnOverlay(e, id) {
+      if (e.target === document.getElementById(id)) closeModal(id);
+    }
+
+    async function signOut() {
+      await dbClient.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
