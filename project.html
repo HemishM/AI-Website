@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project — CollabrAI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: #0d1526;
+      border-right: 1px solid #1a2a45;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      z-index: 50;
+    }
+    .main-content {
+      margin-left: 240px;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .sidebar-link.active { color: #60a5fa; border-left-color: #3b82f6; background: rgba(59,130,246,0.06); }
+    .top-bar {
+      background: rgba(8,13,26,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1a2a45;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .tab-btn {
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn.active { color: #60a5fa; border-bottom-color: #3b82f6; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid #1a2a45;
+    }
+    .member-row:last-child { border-bottom: none; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #0d1526;
+      border: 1px solid #1a2a45;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      margin: 20px;
+    }
+    .alert-card {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .suggestion-card {
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="flex items-center gap-2 px-5 mb-8">
+      <a href="dashboard.html"><img src="logo.png" alt="CollabrAI" style="height: 36px;"></a>
+    </div>
+    <nav class="flex flex-col gap-1 flex-1">
+      <a href="dashboard.html" class="sidebar-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Projects
+      </a>
+      <a href="settings.html" class="sidebar-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div style="border-top: 1px solid #1a2a45; padding: 16px 20px;">
+      <div class="flex items-center gap-3 mb-3">
+        <div id="user-avatar" style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; flex-shrink:0;">?</div>
+        <div style="overflow:hidden;">
+          <p id="user-name" class="text-white text-xs font-semibold truncate">Loading...</p>
+          <p id="user-email" class="text-slate-500 text-xs truncate">...</p>
+        </div>
+      </div>
+      <button onclick="signOut()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#64748b'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="main-content">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <a href="dashboard.html" class="text-slate-500 text-sm hover:text-white transition-colors" style="text-decoration:none;">Projects</a>
+          <span class="text-slate-600 text-sm">/</span>
+          <span id="proj-title" class="text-white text-sm font-semibold">Loading...</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="proj-course" class="text-slate-500 text-xs"></span>
+          <span id="proj-deadline" class="text-slate-500 text-xs"></span>
+          <span id="proj-days-left" class="text-xs font-semibold"></span>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="openModal('invite-modal')" class="btn-ghost" style="font-size:13px; padding:9px 16px;">+ Invite Member</button>
+        <button onclick="openModal('doc-modal')" class="btn-primary" style="font-size:13px; padding:9px 16px;">+ Connect Doc</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="border-bottom: 1px solid #1a2a45; padding: 0 32px; display:flex; gap:4px;">
+      <button class="tab-btn active" onclick="showTab('contributions', this)">Contributions</button>
+      <button class="tab-btn" onclick="showTab('docs', this)">Documents</button>
+      <button class="tab-btn" onclick="showTab('alerts', this)">Alerts</button>
+      <button class="tab-btn" onclick="showTab('report', this)">Report</button>
+    </div>
+
+    <div style="padding: 32px;">
+
+      <!-- ===== TAB: CONTRIBUTIONS ===== -->
+      <div id="tab-contributions" class="tab-content active">
+        <div class="grid md:grid-cols-3 gap-5 mb-8">
+          <div class="card text-center">
+            <p class="text-slate-500 text-xs mb-1">Members</p>
+            <p id="stat-members" class="text-white text-3xl font-black">—</p>
+          </div>
+          <div class="card text-center">
+            <p class="text-slate-500 text-xs mb-1">Documents Tracked</p>
+            <p id="stat-docs" class="text-white text-3xl font-black">—</p>
+          </div>
+          <div class="card text-center">
+            <p class="text-slate-500 text-xs mb-1">Last Activity</p>
+            <p id="stat-activity" class="text-white text-3xl font-black">—</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="text-white font-bold mb-4">Contribution Breakdown</h3>
+          <div id="members-list">
+            <div class="text-slate-500 text-sm text-center py-8">
+              No members yet. Invite teammates to start tracking contributions.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: DOCUMENTS ===== -->
+      <div id="tab-docs" class="tab-content">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-white font-bold">Connected Documents</h3>
+          <button onclick="openModal('doc-modal')" class="btn-primary" style="font-size:13px; padding:9px 16px;">+ Connect Doc</button>
+        </div>
+        <div id="docs-list">
+          <div class="card text-center py-12">
+            <p style="font-size:36px; margin-bottom:12px;">📄</p>
+            <p class="text-white font-semibold mb-2">No documents connected</p>
+            <p class="text-slate-400 text-sm mb-6">Connect a Google Doc, Sheet, or Slides to start tracking contributions.</p>
+            <button onclick="openModal('doc-modal')" class="btn-primary">Connect your first doc</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: ALERTS ===== -->
+      <div id="tab-alerts" class="tab-content">
+        <h3 class="text-white font-bold mb-5">Active Alerts</h3>
+        <div id="alerts-list">
+          <div class="card text-center py-12">
+            <p style="font-size:36px; margin-bottom:12px;">✅</p>
+            <p class="text-white font-semibold mb-2">No alerts right now</p>
+            <p class="text-slate-400 text-sm">CollabrAI will flag issues here as your team works — inactivity, uneven workload, falling behind pace.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: REPORT ===== -->
+      <div id="tab-report" class="tab-content">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-white font-bold">Contribution Report</h3>
+          <button onclick="generateReport()" class="btn-primary" style="font-size:13px; padding:9px 16px;">Generate Report</button>
+        </div>
+        <div id="report-output" class="card" style="padding: 28px;">
+          <p class="text-slate-500 text-sm text-center py-8">Click "Generate Report" to create a contribution summary you can share with your professor.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== INVITE MEMBER MODAL ===== -->
+  <div id="invite-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'invite-modal')">
+    <div class="modal">
+      <h2 class="text-xl font-bold text-white mb-1">Invite a Teammate</h2>
+      <p class="text-slate-400 text-sm mb-6">They'll get an email to join this project.</p>
+      <form id="invite-form" class="flex flex-col gap-4">
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Teammate's email</label>
+          <input type="email" id="invite-email" class="form-input" placeholder="teammate@email.com" required />
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeModal('invite-modal')" class="btn-ghost" style="flex:1;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;">Send Invite</button>
+        </div>
+      </form>
+      <div id="invite-confirm" style="display:none; color:#93c5fd; font-size:13px; margin-top:10px; text-align:center;">Invite sent!</div>
+      <div id="invite-error" style="display:none; color:#f87171; font-size:13px; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== CONNECT DOC MODAL ===== -->
+  <div id="doc-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'doc-modal')">
+    <div class="modal">
+      <h2 class="text-xl font-bold text-white mb-1">Connect a Document</h2>
+      <p class="text-slate-400 text-sm mb-6">Paste a Google Docs, Sheets, or Slides link. CollabrAI will track activity — not content.</p>
+      <form id="doc-form" class="flex flex-col gap-4">
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Document name</label>
+          <input type="text" id="doc-name" class="form-input" placeholder="e.g. Final Report Draft" required />
+        </div>
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Google Doc / Sheet / Slides URL</label>
+          <input type="url" id="doc-url" class="form-input" placeholder="https://docs.google.com/..." required />
+        </div>
+        <div>
+          <label class="text-slate-400 text-xs mb-1 block">Type</label>
+          <select id="doc-type" class="form-input" style="cursor:pointer;">
+            <option value="doc">Google Doc</option>
+            <option value="sheet">Google Sheet</option>
+            <option value="slides">Google Slides</option>
+          </select>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeModal('doc-modal')" class="btn-ghost" style="flex:1;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;">Connect</button>
+        </div>
+      </form>
+      <div id="doc-error" style="display:none; color:#f87171; font-size:13px; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    let currentUser = null;
+    let currentProject = null;
+    const projectId = new URLSearchParams(window.location.search).get('id');
+
+    async function init() {
+      if (!projectId) { window.location.href = 'dashboard.html'; return; }
+
+      const { data: { session } } = await dbClient.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      currentUser = session.user;
+
+      // Load profile
+      const { data: profile } = await dbClient.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (!profile || !profile.onboarded) { window.location.href = 'onboarding.html'; return; }
+
+      const name = profile.full_name || currentUser.email.split('@')[0];
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-email').textContent = currentUser.email;
+      document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+
+      // Load project
+      const { data: project, error } = await dbClient.from('projects').select('*').eq('id', projectId).single();
+      if (error || !project) { window.location.href = 'dashboard.html'; return; }
+      currentProject = project;
+
+      document.getElementById('proj-title').textContent = project.name;
+      document.title = project.name + ' — CollabrAI';
+      if (project.course) document.getElementById('proj-course').textContent = project.course;
+
+      if (project.deadline) {
+        const deadline = new Date(project.deadline);
+        const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+        document.getElementById('proj-deadline').textContent = 'Due ' + deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const color = daysLeft <= 3 ? '#f87171' : daysLeft <= 7 ? '#fbbf24' : '#4ade80';
+        document.getElementById('proj-days-left').textContent = daysLeft > 0 ? daysLeft + 'd left' : 'Past due';
+        document.getElementById('proj-days-left').style.color = color;
+      }
+
+      loadMembers();
+      loadDocs();
+    }
+
+    async function loadMembers() {
+      const { data: members } = await dbClient
+        .from('project_members')
+        .select('*, profiles(full_name, email)')
+        .eq('project_id', projectId);
+
+      document.getElementById('stat-members').textContent = members ? members.length : 0;
+
+      if (!members || members.length === 0) return;
+
+      const colors = [
+        { bg: 'rgba(59,130,246,0.2)', color: '#60a5fa' },
+        { bg: 'rgba(139,92,246,0.2)', color: '#a78bfa' },
+        { bg: 'rgba(34,197,94,0.2)', color: '#4ade80' },
+        { bg: 'rgba(251,191,36,0.2)', color: '#fbbf24' },
+        { bg: 'rgba(239,68,68,0.2)', color: '#f87171' },
+      ];
+
+      const list = document.getElementById('members-list');
+      list.innerHTML = members.map((m, i) => {
+        const name = m.profiles?.full_name || m.profiles?.email || m.email;
+        const initials = name.charAt(0).toUpperCase();
+        const c = colors[i % colors.length];
+        const contrib = m.contribution_pct || 0;
+        return `
+          <div class="member-row">
+            <div class="avatar" style="background:${c.bg}; color:${c.color};">${initials}</div>
+            <div style="flex:1;">
+              <div class="flex justify-between mb-1">
+                <span class="text-white text-sm font-medium">${name}</span>
+                <span style="color:${c.color};" class="text-sm font-semibold">${contrib}%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${contrib}%;"></div></div>
+              <p class="text-slate-500 text-xs mt-1">${m.role || 'Member'}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadDocs() {
+      const { data: docs } = await dbClient
+        .from('project_docs')
+        .select('*')
+        .eq('project_id', projectId);
+
+      document.getElementById('stat-docs').textContent = docs ? docs.length : 0;
+      document.getElementById('stat-activity').textContent = docs && docs.length > 0 ? 'Today' : '—';
+
+      if (!docs || docs.length === 0) return;
+
+      const icons = { doc: '📄', sheet: '📊', slides: '📑' };
+      document.getElementById('docs-list').innerHTML = docs.map(d => `
+        <div class="card mb-3" style="padding:16px;">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span style="font-size:22px;">${icons[d.doc_type] || '📄'}</span>
+              <div>
+                <p class="text-white font-semibold text-sm">${d.name}</p>
+                <p class="text-slate-500 text-xs">${d.doc_type === 'doc' ? 'Google Doc' : d.doc_type === 'sheet' ? 'Google Sheet' : 'Google Slides'}</p>
+              </div>
+            </div>
+            <a href="${d.url}" target="_blank" class="btn-ghost" style="font-size:12px; padding:7px 14px;">Open ↗</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Invite form
+    document.getElementById('invite-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('invite-email').value.trim();
+
+      const { error } = await dbClient.from('project_invites').insert([{
+        project_id: projectId,
+        invited_email: email,
+        invited_by: currentUser.id
+      }]);
+
+      if (error) {
+        document.getElementById('invite-error').textContent = error.message;
+        document.getElementById('invite-error').style.display = 'block';
+      } else {
+        document.getElementById('invite-form').style.display = 'none';
+        document.getElementById('invite-confirm').style.display = 'block';
+        setTimeout(() => closeModal('invite-modal'), 1500);
+      }
+    });
+
+    // Connect doc form
+    document.getElementById('doc-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('doc-name').value.trim();
+      const url  = document.getElementById('doc-url').value.trim();
+      const type = document.getElementById('doc-type').value;
+
+      // Extract Google doc ID from URL
+      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      const docId = match ? match[1] : null;
+
+      const { error } = await dbClient.from('project_docs').insert([{
+        project_id: projectId,
+        name,
+        url,
+        doc_type: type,
+        google_doc_id: docId
+      }]);
+
+      if (error) {
+        document.getElementById('doc-error').textContent = error.message;
+        document.getElementById('doc-error').style.display = 'block';
+      } else {
+        closeModal('doc-modal');
+        loadDocs();
+      }
+    });
+
+    // Generate report
+    function generateReport() {
+      const el = document.getElementById('report-output');
+      const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      el.innerHTML = `
+        <div style="font-family: monospace; font-size: 13px; line-height: 2; color: #94a3b8;">
+          <p style="color:#e2e8f0; font-weight:bold; font-size:14px;">CONTRIBUTION REPORT — ${currentProject?.name?.toUpperCase()}</p>
+          <p>Generated: ${date}</p>
+          <p style="color:#1a2a45;">─────────────────────────────────────</p>
+          <div id="report-members"></div>
+          <p style="color:#1a2a45;">─────────────────────────────────────</p>
+          <p>Generated by CollabrAI · collabrai.app</p>
+        </div>
+        <div class="mt-5 flex gap-3">
+          <button onclick="window.print()" class="btn-primary" style="font-size:13px; padding:10px 20px;">Print / Save as PDF</button>
+        </div>
+      `;
+      // Populate members in report
+      dbClient.from('project_members').select('*, profiles(full_name, email)').eq('project_id', projectId).then(({ data }) => {
+        const el = document.getElementById('report-members');
+        if (!data || data.length === 0) {
+          el.innerHTML = '<p>No members tracked yet.</p>';
+          return;
+        }
+        el.innerHTML = data.map(m => {
+          const name = m.profiles?.full_name || m.profiles?.email || m.email;
+          const pct = m.contribution_pct || 0;
+          const label = pct >= 25 ? 'Active contributor' : pct >= 10 ? 'Partial contributor' : '⚠ Low activity';
+          return `<p style="color:${pct >= 25 ? '#60a5fa' : pct >= 10 ? '#a78bfa' : '#f87171'};">${name.padEnd(25)} ${String(pct + '%').padEnd(6)} | ${label}</p>`;
+        }).join('');
+      });
+    }
+
+    function showTab(name, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function closeModalOnOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+    async function signOut() {
+      await dbClient.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
