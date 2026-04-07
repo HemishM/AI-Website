@@ -2,7 +2,17 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const { invited_email, project_name, invited_by_name } = await req.json();
 
@@ -18,12 +28,10 @@ serve(async (req) => {
         subject: `You've been invited to a project on CollabrAI`,
         html: `
           <div style="font-family: Inter, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; background: #080d1a; color: #f1f5f9;">
-            <img src="https://ai-website-seven-phi.vercel.app/logo.png" alt="CollabrAI" style="height: 36px; margin-bottom: 32px;" />
             <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; color: #ffffff;">You've been invited!</h1>
             <p style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
               <strong style="color:#f1f5f9;">${invited_by_name || "A teammate"}</strong> has invited you to collaborate on
-              <strong style="color:#f1f5f9;">${project_name || "a project"}</strong> using CollabrAI —
-              the AI-powered group project accountability tracker.
+              <strong style="color:#f1f5f9;">${project_name || "a project"}</strong> using CollabrAI.
             </p>
             <a href="https://ai-website-seven-phi.vercel.app/login.html"
                style="display:inline-block; background: linear-gradient(135deg,#3b82f6,#8b5cf6); color:white; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none;">
@@ -40,12 +48,12 @@ serve(async (req) => {
     const data = await res.json();
     return new Response(JSON.stringify(data), {
       status: res.ok ? 200 : 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
