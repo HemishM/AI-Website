@@ -425,6 +425,7 @@
       e.preventDefault();
       const email = document.getElementById('invite-email').value.trim();
 
+      // Save invite to database
       const { error } = await dbClient.from('project_invites').insert([{
         project_id: projectId,
         invited_email: email,
@@ -434,11 +435,27 @@
       if (error) {
         document.getElementById('invite-error').textContent = error.message;
         document.getElementById('invite-error').style.display = 'block';
-      } else {
-        document.getElementById('invite-form').style.display = 'none';
-        document.getElementById('invite-confirm').style.display = 'block';
-        setTimeout(() => closeModal('invite-modal'), 1500);
+        return;
       }
+
+      // Send invite email via Edge Function
+      const { data: { session } } = await dbClient.auth.getSession();
+      await fetch('https://pofmhobxednullgxtoah.supabase.co/functions/v1/send-invite-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          invited_email: email,
+          project_name: currentProject?.name,
+          invited_by_name: document.getElementById('user-name').textContent
+        })
+      });
+
+      document.getElementById('invite-form').style.display = 'none';
+      document.getElementById('invite-confirm').style.display = 'block';
+      setTimeout(() => closeModal('invite-modal'), 1500);
     });
 
     // Connect doc form
