@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — CollabrAI</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: #0d1526;
+      border-right: 1px solid #1a2a45;
+      position: fixed;
+      top: 0; left: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      z-index: 50;
+    }
+    .main-content {
+      margin-left: 240px;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: #f1f5f9;
+      background: rgba(255,255,255,0.03);
+    }
+    .sidebar-link.active {
+      color: #60a5fa;
+      border-left-color: #3b82f6;
+      background: rgba(59,130,246,0.06);
+    }
+    .top-bar {
+      background: rgba(8,13,26,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1a2a45;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .settings-card {
+      background: #0d1526;
+      border: 1px solid #1a2a45;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .connected-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .disconnected-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(100,116,139,0.12);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="flex items-center gap-2 px-5 mb-8">
+      <img src="logo.png" alt="CollabrAI" style="height: 36px;">
+    </div>
+    <nav class="flex flex-col gap-1 flex-1">
+      <a href="dashboard.html" class="sidebar-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Projects
+      </a>
+      <a href="settings.html" class="sidebar-link active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div style="border-top: 1px solid #1a2a45; padding: 16px 20px; margin-top: auto;">
+      <div class="flex items-center gap-3 mb-3">
+        <div id="user-avatar" style="width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; flex-shrink:0;">?</div>
+        <div style="overflow:hidden;">
+          <p id="user-name" class="text-white text-xs font-semibold truncate">Loading...</p>
+          <p id="user-email" class="text-slate-500 text-xs truncate">...</p>
+        </div>
+      </div>
+      <button onclick="signOut()" style="background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#64748b'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="top-bar">
+      <h1 class="text-white font-bold text-lg">Settings</h1>
+    </div>
+
+    <div style="padding: 32px; max-width: 640px;">
+
+      <!-- Profile -->
+      <div class="settings-card">
+        <h2 class="text-white font-bold text-base mb-5">Profile</h2>
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="text-slate-400 text-xs mb-1 block">Full name</label>
+            <input type="text" id="profile-name" class="form-input" placeholder="Your name" />
+          </div>
+          <div>
+            <label class="text-slate-400 text-xs mb-1 block">I am a...</label>
+            <select id="profile-role" class="form-input" style="cursor:pointer;">
+              <option value="student">Student</option>
+              <option value="professor">Professor / Instructor</option>
+              <option value="business">Team lead / Manager</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400 text-xs mb-1 block">University or organization</label>
+            <input type="text" id="profile-org" class="form-input" placeholder="e.g. Penn State University" />
+          </div>
+          <div class="flex items-center gap-3 mt-2">
+            <button onclick="saveProfile()" class="btn-primary" style="font-size:13px; padding:9px 20px;">Save changes</button>
+            <span id="profile-saved" style="display:none; color:#4ade80; font-size:13px;">Saved!</span>
+            <span id="profile-error" style="display:none; color:#f87171; font-size:13px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected Accounts -->
+      <div class="settings-card">
+        <h2 class="text-white font-bold text-base mb-5">Connected Accounts</h2>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <div>
+              <p class="text-white font-semibold text-sm">Google Workspace</p>
+              <p class="text-slate-500 text-xs">Docs, Slides, Sheets</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="google-status" class="disconnected-badge">Not connected</span>
+            <button id="google-btn" onclick="connectGoogle()" class="btn-primary" style="font-size:12px; padding:7px 14px;">Connect</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-card" style="border-color: rgba(248,113,113,0.2);">
+        <h2 class="text-white font-bold text-base mb-2">Sign out</h2>
+        <p class="text-slate-400 text-sm mb-4">Sign out of your CollabrAI account on this device.</p>
+        <button onclick="signOut()" style="background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Sign out</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    let currentUser = null;
+    let currentProfile = null;
+
+    async function init() {
+      const { data: { session } } = await dbClient.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      currentUser = session.user;
+
+      const { data: profile } = await dbClient
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!profile || !profile.onboarded) { window.location.href = 'onboarding.html'; return; }
+      currentProfile = profile;
+
+      const name = profile.full_name || currentUser.email.split('@')[0];
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-email').textContent = currentUser.email;
+      document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+
+      // Fill profile form
+      document.getElementById('profile-name').value = profile.full_name || '';
+      document.getElementById('profile-role').value = profile.role || 'student';
+      document.getElementById('profile-org').value = profile.organization || '';
+
+      // Google connection status
+      if (profile.google_connected) {
+        document.getElementById('google-status').className = 'connected-badge';
+        document.getElementById('google-status').textContent = 'Connected';
+        document.getElementById('google-btn').textContent = 'Disconnect';
+        document.getElementById('google-btn').onclick = disconnectGoogle;
+        document.getElementById('google-btn').style.background = 'rgba(248,113,113,0.1)';
+        document.getElementById('google-btn').style.border = '1px solid rgba(248,113,113,0.3)';
+        document.getElementById('google-btn').style.color = '#f87171';
+      }
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById('profile-name').value.trim();
+      const role = document.getElementById('profile-role').value;
+      const org  = document.getElementById('profile-org').value.trim();
+
+      const { error } = await dbClient
+        .from('profiles')
+        .update({ full_name: name, role, organization: org, updated_at: new Date().toISOString() })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        document.getElementById('profile-error').textContent = error.message;
+        document.getElementById('profile-error').style.display = 'inline';
+        return;
+      }
+
+      document.getElementById('profile-saved').style.display = 'inline';
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+      setTimeout(() => { document.getElementById('profile-saved').style.display = 'none'; }, 2000);
+    }
+
+    async function connectGoogle() {
+      await dbClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/presentations.readonly',
+          redirectTo: window.location.origin + '/settings.html'
+        }
+      });
+
+      await dbClient.from('profiles').update({ google_connected: true }).eq('id', currentUser.id);
+    }
+
+    async function disconnectGoogle() {
+      await dbClient.from('profiles').update({ google_connected: false }).eq('id', currentUser.id);
+      window.location.reload();
+    }
+
+    async function signOut() {
+      await dbClient.auth.signOut();
+      window.location.href = 'login.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>
