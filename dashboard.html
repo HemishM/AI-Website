@@ -335,6 +335,14 @@
         return;
       }
 
+      // Add owner as a member automatically
+      await dbClient.from('project_members').insert([{
+        project_id: data.id,
+        user_id: currentUser.id,
+        role: 'owner',
+        contribution_pct: 0
+      }]);
+
       closeModal('create-modal');
       window.location.href = `project.html?id=${data.id}`;
     });
