@@ -186,6 +186,7 @@
       }
 
       await saveProfile(true, name, role, org);
+      await acceptPendingInvites();
 
       // If they selected Google, trigger Google OAuth for Drive scopes
       if (connectGoogle) {
@@ -198,6 +199,32 @@
         });
       } else {
         window.location.href = 'dashboard.html';
+      }
+    }
+
+    async function acceptPendingInvites() {
+      // Find any pending invites for this user's email
+      const { data: invites } = await dbClient
+        .from('project_invites')
+        .select('*')
+        .eq('invited_email', currentUser.email)
+        .eq('status', 'pending');
+
+      if (!invites || invites.length === 0) return;
+
+      for (const invite of invites) {
+        // Add them to project_members
+        await dbClient.from('project_members').insert([{
+          project_id: invite.project_id,
+          user_id: currentUser.id,
+          role: 'member',
+          contribution_pct: 0
+        }]);
+
+        // Mark invite as accepted
+        await dbClient.from('project_invites')
+          .update({ status: 'accepted' })
+          .eq('id', invite.id);
       }
     }
 
