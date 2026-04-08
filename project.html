@@ -172,6 +172,7 @@
         </div>
       </div>
       <div class="flex gap-3">
+        <button id="delete-btn" onclick="openModal('delete-modal')" style="display:none; font-size:13px; padding:9px 16px; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#f87171; border-radius:8px; cursor:pointer; font-weight:600;">Delete Project</button>
         <button onclick="openModal('invite-modal')" class="btn-ghost" style="font-size:13px; padding:9px 16px;">+ Invite Member</button>
         <button onclick="openModal('doc-modal')" class="btn-primary" style="font-size:13px; padding:9px 16px;">+ Connect Doc</button>
       </div>
@@ -307,6 +308,18 @@
     </div>
   </div>
 
+  <!-- DELETE MODAL -->
+  <div id="delete-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'delete-modal')">
+    <div class="modal">
+      <h2 class="text-xl font-bold text-white mb-2">Delete Project</h2>
+      <p class="text-slate-400 text-sm mb-6">Are you sure? This will permanently delete the project, all members, and all connected documents. This cannot be undone.</p>
+      <div class="flex gap-3">
+        <button onclick="closeModal('delete-modal')" class="btn-ghost" style="flex:1;">Cancel</button>
+        <button onclick="deleteProject()" style="flex:1; background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.4); color:#f87171; padding:11px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script>
@@ -348,8 +361,21 @@
         document.getElementById('proj-days-left').style.color = color;
       }
 
+      // Show delete button only to project owner
+      if (project.owner_id === currentUser.id) {
+        document.getElementById('delete-btn').style.display = 'block';
+      }
+
       loadMembers();
       loadDocs();
+    }
+
+    async function deleteProject() {
+      await dbClient.from('project_docs').delete().eq('project_id', projectId);
+      await dbClient.from('project_members').delete().eq('project_id', projectId);
+      await dbClient.from('project_invites').delete().eq('project_id', projectId);
+      await dbClient.from('projects').delete().eq('id', projectId);
+      window.location.href = 'dashboard.html';
     }
 
     async function loadMembers() {
