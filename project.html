@@ -355,12 +355,23 @@
     async function loadMembers() {
       const { data: members } = await dbClient
         .from('project_members')
-        .select('*, profiles(full_name, email)')
+        .select('*')
         .eq('project_id', projectId);
 
       document.getElementById('stat-members').textContent = members ? members.length : 0;
 
       if (!members || members.length === 0) return;
+
+      // Fetch profiles separately to get names
+      const userIds = members.map(m => m.user_id).filter(Boolean);
+      let profileMap = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await dbClient
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
+      }
 
       const colors = [
         { bg: 'rgba(59,130,246,0.2)', color: '#60a5fa' },
@@ -372,7 +383,8 @@
 
       const list = document.getElementById('members-list');
       list.innerHTML = members.map((m, i) => {
-        const name = m.profiles?.full_name || m.profiles?.email || m.email;
+        const profile = profileMap[m.user_id];
+        const name = profile?.full_name || profile?.email || m.email || 'Unknown';
         const initials = name.charAt(0).toUpperCase();
         const c = colors[i % colors.length];
         const contrib = m.contribution_pct || 0;
