@@ -243,16 +243,41 @@
     }
 
     async function loadProjects() {
-      const { data: projects, error } = await dbClient
+      // Load projects owned by user
+      const { data: ownedProjects } = await dbClient
         .from('projects')
         .select('*')
         .eq('owner_id', currentUser.id)
         .order('created_at', { ascending: false });
 
+      // Load projects user is a member of
+      const { data: memberships } = await dbClient
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', currentUser.id);
+
+      let memberProjects = [];
+      if (memberships && memberships.length > 0) {
+        const memberProjectIds = memberships.map(m => m.project_id);
+        const { data: mp } = await dbClient
+          .from('projects')
+          .select('*')
+          .in('id', memberProjectIds)
+          .order('created_at', { ascending: false });
+        memberProjects = mp || [];
+      }
+
+      // Merge and deduplicate
+      const ownedIds = new Set((ownedProjects || []).map(p => p.id));
+      const allProjects = [
+        ...(ownedProjects || []),
+        ...memberProjects.filter(p => !ownedIds.has(p.id))
+      ];
+
       const grid = document.getElementById('projects-grid');
       const empty = document.getElementById('empty-state');
 
-      if (!projects || projects.length === 0) {
+      if (allProjects.length === 0) {
         grid.style.display = 'none';
         empty.style.display = 'block';
         return;
@@ -260,7 +285,7 @@
 
       empty.style.display = 'none';
       grid.style.display = 'grid';
-      grid.innerHTML = projects.map(p => projectCard(p)).join('');
+      grid.innerHTML = allProjects.map(p => projectCard(p)).join('');
     }
 
     function projectCard(p) {
