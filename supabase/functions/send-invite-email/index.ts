@@ -22,7 +22,7 @@ serve(async (req) => {
         "api-key": BREVO_API_KEY,
       },
       body: JSON.stringify({
-        sender: { name: "CollabrAI", email: "hemmy0629@gmail.com" },
+        sender: { name: "CollabrAI", email: "hemish0629@gmail.com" },
         to: [{ email: invited_email }],
         subject: `You've been invited to a project on CollabrAI`,
         htmlContent: `
