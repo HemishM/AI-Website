@@ -206,7 +206,11 @@
         </div>
 
         <div class="card">
-          <h3 class="text-white font-bold mb-4">Contribution Breakdown</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-bold">Contribution Breakdown</h3>
+            <button id="sync-btn" onclick="syncContributions()" class="btn-primary" style="font-size:12px; padding:8px 16px;">Sync Contributions</button>
+          </div>
+          <div id="sync-status" style="display:none; color:#93c5fd; font-size:12px; margin-bottom:12px;"></div>
           <div id="members-list">
             <div class="text-slate-500 text-sm text-center py-8">
               No members yet. Invite teammates to start tracking contributions.
@@ -524,37 +528,120 @@
       }
     });
 
+    async function syncContributions() {
+      const syncBtn = document.getElementById('sync-btn');
+      const statusEl = document.getElementById('sync-status');
+      syncBtn.textContent = 'Syncing...';
+      syncBtn.disabled = true;
+      statusEl.style.display = 'block';
+      statusEl.textContent = 'Fetching revision history from Google...';
+
+      const { data: { session } } = await dbClient.auth.getSession();
+      const token = session?.provider_token;
+
+      if (!token) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'Google not connected. Go to Settings and reconnect Google.';
+        syncBtn.textContent = 'Sync Contributions';
+        syncBtn.disabled = false;
+        return;
+      }
+
+      const { data: docs } = await dbClient.from('project_docs').select('*').eq('project_id', projectId);
+      if (!docs || docs.length === 0) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'No documents connected. Add a Google Doc first.';
+        syncBtn.textContent = 'Sync Contributions';
+        syncBtn.disabled = false;
+        return;
+      }
+
+      // Count revisions per email across all docs
+      const revisionCounts = {};
+      for (const doc of docs) {
+        const fileId = doc.google_doc_id;
+        if (!fileId) continue;
+        try {
+          const res = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(lastModifyingUser/emailAddress)&pageSize=200`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const data = await res.json();
+          if (data.revisions) {
+            for (const rev of data.revisions) {
+              const email = rev.lastModifyingUser?.emailAddress;
+              if (email) revisionCounts[email] = (revisionCounts[email] || 0) + 1;
+            }
+          }
+        } catch (err) {
+          console.error('Revision fetch error for', doc.name, err);
+        }
+      }
+
+      // Get members and their emails
+      const { data: members } = await dbClient.from('project_members').select('*').eq('project_id', projectId);
+      if (!members || members.length === 0) {
+        syncBtn.textContent = 'Sync Contributions';
+        syncBtn.disabled = false;
+        return;
+      }
+
+      const userIds = members.map(m => m.user_id).filter(Boolean);
+      const { data: profiles } = await dbClient.from('profiles').select('id, email').in('id', userIds);
+      const profileMap = {};
+      if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
+
+      const total = Object.values(revisionCounts).reduce((a, b) => a + b, 0);
+
+      for (const member of members) {
+        const email = profileMap[member.user_id]?.email;
+        const count = email ? (revisionCounts[email] || 0) : 0;
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        await dbClient.from('project_members').update({ contribution_pct: pct }).eq('id', member.id);
+      }
+
+      statusEl.style.color = '#4ade80';
+      statusEl.textContent = `Synced from ${docs.length} document${docs.length > 1 ? 's' : ''}. ${total} revisions tracked.`;
+      syncBtn.textContent = 'Sync Contributions';
+      syncBtn.disabled = false;
+      await loadMembers();
+    }
+
     // Generate report
-    function generateReport() {
+    async function generateReport() {
       const el = document.getElementById('report-output');
       const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+      const { data: members } = await dbClient.from('project_members').select('*').eq('project_id', projectId);
+      const userIds = (members || []).map(m => m.user_id).filter(Boolean);
+      let profileMap = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await dbClient.from('profiles').select('id, full_name, email').in('id', userIds);
+        if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
+      }
+
+      const rows = (members || []).map(m => {
+        const profile = profileMap[m.user_id];
+        const name = profile?.full_name || profile?.email || 'Unknown';
+        const pct = m.contribution_pct || 0;
+        const label = pct >= 25 ? 'Active contributor' : pct >= 10 ? 'Partial contributor' : 'Low activity';
+        const color = pct >= 25 ? '#60a5fa' : pct >= 10 ? '#a78bfa' : '#f87171';
+        return `<p style="color:${color};">${name.padEnd(25)} ${String(pct + '%').padEnd(6)} | ${label}</p>`;
+      }).join('');
+
       el.innerHTML = `
         <div style="font-family: monospace; font-size: 13px; line-height: 2; color: #94a3b8;">
           <p style="color:#e2e8f0; font-weight:bold; font-size:14px;">CONTRIBUTION REPORT — ${currentProject?.name?.toUpperCase()}</p>
           <p>Generated: ${date}</p>
           <p style="color:#1a2a45;">─────────────────────────────────────</p>
-          <div id="report-members"></div>
+          ${rows || '<p>No members tracked yet.</p>'}
           <p style="color:#1a2a45;">─────────────────────────────────────</p>
-          <p>Generated by CollabrAI · collabrai.app</p>
+          <p>Generated by CollabrAI</p>
         </div>
-        <div class="mt-5 flex gap-3">
+        <div class="mt-5">
           <button onclick="window.print()" class="btn-primary" style="font-size:13px; padding:10px 20px;">Print / Save as PDF</button>
         </div>
       `;
-      // Populate members in report
-      dbClient.from('project_members').select('*, profiles(full_name, email)').eq('project_id', projectId).then(({ data }) => {
-        const el = document.getElementById('report-members');
-        if (!data || data.length === 0) {
-          el.innerHTML = '<p>No members tracked yet.</p>';
-          return;
-        }
-        el.innerHTML = data.map(m => {
-          const name = m.profiles?.full_name || m.profiles?.email || m.email;
-          const pct = m.contribution_pct || 0;
-          const label = pct >= 25 ? 'Active contributor' : pct >= 10 ? 'Partial contributor' : '⚠ Low activity';
-          return `<p style="color:${pct >= 25 ? '#60a5fa' : pct >= 10 ? '#a78bfa' : '#f87171'};">${name.padEnd(25)} ${String(pct + '%').padEnd(6)} | ${label}</p>`;
-        }).join('');
-      });
     }
 
     function showTab(name, btn) {
