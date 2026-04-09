@@ -537,7 +537,13 @@
       statusEl.textContent = 'Fetching revision history from Google...';
 
       const { data: { session } } = await dbClient.auth.getSession();
-      const token = session?.provider_token;
+      let token = session?.provider_token;
+
+      // Fall back to stored token in profiles
+      if (!token) {
+        const { data: profile } = await dbClient.from('profiles').select('google_access_token').eq('id', currentUser.id).single();
+        token = profile?.google_access_token;
+      }
 
       if (!token) {
         statusEl.style.color = '#f87171';
