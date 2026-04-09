@@ -632,16 +632,17 @@
       const profileMap = {};
       if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
 
-      // Collect text additions per email across all docs
-      const additionsByEmail = {};
+      // Collect revision counts and full doc text per email
+      const revisionCountByEmail = {};
+      let fullDocText = '';
 
       for (const doc of docs) {
         const fileId = doc.google_doc_id;
         if (!fileId) continue;
-        statusEl.textContent = `Reading revisions from "${doc.name}"...`;
+        statusEl.textContent = `Reading "${doc.name}"...`;
 
         try {
-          // Get revision list with exportLinks
+          // Get revision list
           const revRes = await fetch(
             `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,lastModifyingUser/emailAddress,exportLinks)&pageSize=200`,
             { headers: { Authorization: `Bearer ${token}` } }
@@ -649,44 +650,37 @@
           const revData = await revRes.json();
           const revisions = revData.revisions || [];
 
-          let prevText = '';
-          for (let i = 0; i < revisions.length; i++) {
-            const rev = revisions[i];
+          // Count revisions per email
+          for (const rev of revisions) {
             const email = rev.lastModifyingUser?.emailAddress;
-            if (!email) continue;
+            if (email) revisionCountByEmail[email] = (revisionCountByEmail[email] || 0) + 1;
+          }
 
-            // Use exportLinks to download plain text for this revision
-            const exportUrl = rev.exportLinks?.['text/plain'];
-            if (!exportUrl) continue;
-
-            const exportRes = await fetch(exportUrl, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!exportRes.ok) continue;
-            const currentText = await exportRes.text();
-
-            // Diff: characters added vs previous revision
-            const added = currentText.length > prevText.length
-              ? currentText.slice(prevText.length).trim()
-              : '';
-
-            if (added) {
-              additionsByEmail[email] = (additionsByEmail[email] || '') + ' ' + added;
-            }
-            prevText = currentText;
+          // Export latest revision as full text
+          const latest = revisions[revisions.length - 1];
+          const exportUrl = latest?.exportLinks?.['text/plain'];
+          if (exportUrl) {
+            const exportRes = await fetch(exportUrl, { headers: { Authorization: `Bearer ${token}` } });
+            if (exportRes.ok) fullDocText += await exportRes.text();
           }
         } catch (err) {
           console.error('Error reading doc', doc.name, err);
         }
       }
 
-      // Build member list with their additions
+      // Build member list with revision share and full doc context
+      const totalRevisions = Object.values(revisionCountByEmail).reduce((a, b) => a + b, 0);
       const memberData = (members || []).map(m => {
         const profile = profileMap[m.user_id];
+        const email = profile?.email || '';
+        const revCount = revisionCountByEmail[email] || 0;
+        const revShare = totalRevisions > 0 ? Math.round((revCount / totalRevisions) * 100) : 0;
         return {
-          email: profile?.email || '',
-          name: profile?.full_name || profile?.email || 'Unknown',
-          additions: additionsByEmail[profile?.email] || '',
+          email,
+          name: profile?.full_name || email || 'Unknown',
+          revision_share: revShare,
+          revision_count: revCount,
+          additions: fullDocText.slice(0, 2000), // send full doc for context
         };
       });
 

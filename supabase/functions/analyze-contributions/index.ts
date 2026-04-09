@@ -37,17 +37,21 @@ serve(async (req) => {
 
 Assignment: ${assignment}
 
-${member.name}'s text additions to the document:
+Document content (excerpt):
 """
-${member.additions.slice(0, 3000)}
+${(member.additions || '').slice(0, 2000)}
 """
 
-Evaluate this contribution. You MUST respond with ONLY a raw JSON object, no markdown, no code blocks, no explanation. Example format:
-{"score": 75, "summary": "Strong contributions to market analysis section, highly relevant to the assignment."}
+${member.name} made ${member.revision_count || 0} out of ${members.reduce((a: number, m: any) => a + (m.revision_count || 0), 0)} total edits (${member.revision_share || 0}% of saves).
+
+Based on their share of edits and the document content, evaluate their contribution.
+
+You MUST respond with ONLY a raw JSON object, no markdown, no code blocks. Example:
+{"score": 75, "summary": "Active contributor who worked on market analysis and revenue model sections."}
 
 Fields:
-- score: integer 0-100 for relevance and substance
-- summary: one sentence max`;
+- score: integer 0-100 (weight both edit share and document relevance to assignment)
+- summary: one sentence describing their contribution`;
 
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
