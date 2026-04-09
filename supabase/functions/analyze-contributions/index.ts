@@ -19,7 +19,9 @@ serve(async (req) => {
 
     const results = [];
 
-    for (const member of members) {
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i];
+      if (i > 0) await new Promise(r => setTimeout(r, 1500)); // avoid rate limits
       if (!member.revision_count || member.revision_count === 0) {
         results.push({
           email: member.email,
@@ -88,8 +90,8 @@ Fields:
       results.push({
         email: member.email,
         name: member.name,
-        score: parsed.score || 0,
-        summary: parsed.summary || "Could not analyze contribution.",
+        score: parsed.score ?? member.revision_share ?? 0,
+        summary: parsed.summary || `Made ${member.revision_count} edits (${member.revision_share}% of total saves).`,
         word_count: wordCount,
       });
     }
