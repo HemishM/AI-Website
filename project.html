@@ -543,10 +543,17 @@
 
     async function saveAssignment() {
       const text = document.getElementById('assignment-input').value.trim();
-      await dbClient.from('projects').update({ assignment_description: text }).eq('id', projectId);
+      const { error } = await dbClient.from('projects').update({ assignment_description: text }).eq('id', projectId);
       const el = document.getElementById('assignment-saved');
+      if (error) {
+        el.style.color = '#f87171';
+        el.textContent = 'Error: ' + error.message;
+      } else {
+        el.style.color = '#4ade80';
+        el.textContent = 'Saved!';
+      }
       el.style.display = 'inline';
-      setTimeout(() => { el.style.display = 'none'; }, 2000);
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
     async function analyzeContributions() {
