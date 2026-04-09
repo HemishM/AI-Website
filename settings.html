@@ -269,7 +269,10 @@
     }
 
     async function disconnectGoogle() {
-      await dbClient.from('profiles').update({ google_connected: false }).eq('id', currentUser.id);
+      const { error } = await dbClient.from('profiles')
+        .update({ google_connected: false, google_access_token: null })
+        .eq('id', currentUser.id);
+      if (error) { alert('Error: ' + error.message); return; }
       window.location.reload();
     }
 
