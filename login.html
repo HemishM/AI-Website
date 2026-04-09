@@ -95,14 +95,18 @@
     // Handle OAuth callback
     dbClient.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Save Google access token if available
+        // Save Google tokens if available
         if (session.provider_token) {
-          await dbClient.from('profiles').upsert({
+          const update = {
             id: session.user.id,
             google_access_token: session.provider_token,
             google_connected: true,
             updated_at: new Date().toISOString()
-          });
+          };
+          if (session.provider_refresh_token) {
+            update.google_refresh_token = session.provider_refresh_token;
+          }
+          await dbClient.from('profiles').upsert(update);
         }
         await redirectAfterLogin(session.user);
       }

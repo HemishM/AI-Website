@@ -541,6 +541,40 @@
       }
     });
 
+    async function getGoogleToken() {
+      const { data: { session } } = await dbClient.auth.getSession();
+      let token = session?.provider_token;
+      if (token) return token;
+
+      const { data: profile } = await dbClient.from('profiles')
+        .select('google_access_token, google_refresh_token')
+        .eq('id', currentUser.id).single();
+
+      token = profile?.google_access_token;
+
+      // Test if token still works
+      if (token) {
+        const test = await fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token);
+        if (test.ok) return token;
+      }
+
+      // Try to refresh
+      if (profile?.google_refresh_token) {
+        const res = await fetch('https://pofmhobxednullgxtoah.supabase.co/functions/v1/refresh-google-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: profile.google_refresh_token })
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          await dbClient.from('profiles').update({ google_access_token: data.access_token }).eq('id', currentUser.id);
+          return data.access_token;
+        }
+      }
+
+      return null;
+    }
+
     async function saveAssignment() {
       const text = document.getElementById('assignment-input').value.trim();
       const { error } = await dbClient.from('projects').update({ assignment_description: text }).eq('id', projectId);
@@ -574,12 +608,7 @@
       statusEl.style.color = '#93c5fd';
       statusEl.textContent = 'Fetching document revisions...';
 
-      const { data: { session } } = await dbClient.auth.getSession();
-      let token = session?.provider_token;
-      if (!token) {
-        const { data: profile } = await dbClient.from('profiles').select('google_access_token').eq('id', currentUser.id).single();
-        token = profile?.google_access_token;
-      }
+      const token = await getGoogleToken();
       if (!token) {
         statusEl.style.color = '#f87171';
         statusEl.textContent = 'Google not connected. Go to Settings and reconnect.';
@@ -705,15 +734,7 @@
       statusEl.style.display = 'block';
       statusEl.textContent = 'Fetching revision history from Google...';
 
-      const { data: { session } } = await dbClient.auth.getSession();
-      let token = session?.provider_token;
-
-      // Fall back to stored token in profiles
-      if (!token) {
-        const { data: profile } = await dbClient.from('profiles').select('google_access_token').eq('id', currentUser.id).single();
-        token = profile?.google_access_token;
-      }
-
+      const token = await getGoogleToken();
       if (!token) {
         statusEl.style.color = '#f87171';
         statusEl.textContent = 'Google not connected. Go to Settings and reconnect Google.';
