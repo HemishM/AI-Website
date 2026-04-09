@@ -14,86 +14,101 @@ serve(async (req) => {
 
   try {
     const { members, assignment } = await req.json();
-    // members: [{ name, email, additions }]
-    // assignment: string describing the task
 
-    const results = [];
+    // Zero out members with no edits immediately
+    const activeMembers = members.filter((m: any) => m.revision_count > 0);
+    const inactiveMembers = members.filter((m: any) => !m.revision_count || m.revision_count === 0);
 
-    for (let i = 0; i < members.length; i++) {
-      const member = members[i];
-      if (i > 0) await new Promise(r => setTimeout(r, 1500)); // avoid rate limits
-      if (!member.revision_count || member.revision_count === 0) {
-        results.push({
-          email: member.email,
-          name: member.name,
-          score: 0,
-          summary: "No edits made to the document.",
-          word_count: 0,
-        });
-        continue;
-      }
+    const results: any[] = inactiveMembers.map((m: any) => ({
+      email: m.email,
+      name: m.name,
+      score: 0,
+      summary: "No edits made to the document.",
+    }));
 
-      const wordCount = member.additions.trim().split(/\s+/).length;
+    if (activeMembers.length === 0) {
+      return new Response(JSON.stringify({ results }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      const prompt = `You are evaluating a student's contribution to a group assignment.
+    const totalRevisions = activeMembers.reduce((a: number, m: any) => a + (m.revision_count || 0), 0);
+
+    const memberList = activeMembers.map((m: any) =>
+      `- ${m.name}: ${m.revision_count} edits (${m.revision_share}% of saves)`
+    ).join('\n');
+
+    const docExcerpt = (activeMembers[0]?.additions || '').slice(0, 2500);
+
+    const prompt = `You are evaluating student contributions to a group assignment.
 
 Assignment: ${assignment}
 
+Edit counts per student:
+${memberList}
+
 Document content (excerpt):
 """
-${(member.additions || '').slice(0, 2000)}
+${docExcerpt}
 """
 
-${member.name} made ${member.revision_count || 0} out of ${members.reduce((a: number, m: any) => a + (m.revision_count || 0), 0)} total edits (${member.revision_share || 0}% of saves).
+Distribute exactly 100 percentage points among the active contributors based on:
+1. Their share of edits (primary factor)
+2. How relevant the document content is to the assignment (secondary factor)
+3. Students who only added off-topic content should score lower than their edit share suggests
 
-Based on their share of edits and the document content, evaluate their contribution.
+You MUST respond with ONLY a raw JSON array, no markdown, no code blocks. Example for 2 students:
+[{"email":"a@b.com","score":70,"summary":"Led market analysis and revenue model sections."},{"email":"c@d.com","score":30,"summary":"Added introduction and bibliography."}]
 
-You MUST respond with ONLY a raw JSON object, no markdown, no code blocks. Example:
-{"score": 75, "summary": "Active contributor who worked on market analysis and revenue model sections."}
+Rules:
+- Scores must sum to exactly 100
+- Anyone with 0 edits is already excluded — do not include them
+- summary is one sentence per person`;
 
-Fields:
-- score: integer 0-100 (weight both edit share and document relevance to assignment)
-- summary: one sentence describing their contribution`;
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://ai-website-seven-phi.vercel.app",
+      },
+      body: JSON.stringify({
+        model: "google/gemma-3-4b-it:free",
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
 
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://ai-website-seven-phi.vercel.app",
-        },
-        body: JSON.stringify({
-          model: "google/gemma-3-4b-it:free",
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || "[]";
 
-      const data = await res.json();
-      const raw = data.choices?.[0]?.message?.content || "";
+    let parsed: any[] = [];
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    try { parsed = JSON.parse(cleaned); } catch {
+      const match = raw.match(/\[[\s\S]*\]/);
+      if (match) try { parsed = JSON.parse(match[0]); } catch {}
+    }
 
-      let parsed = {};
-      if (raw) {
-        // Try direct parse first
-        try { parsed = JSON.parse(raw.trim()); } catch {
-          // Strip markdown code blocks
-          const stripped = raw.replace(/```json|```/g, '').trim();
-          try { parsed = JSON.parse(stripped); } catch {
-            // Extract JSON object using regex
-            const match = raw.match(/\{[\s\S]*"score"[\s\S]*"summary"[\s\S]*\}/);
-            if (match) {
-              try { parsed = JSON.parse(match[0]); } catch {}
-            }
-          }
-        }
+    // If AI failed, fall back to revision share
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      for (const m of activeMembers) {
+        results.push({
+          email: m.email,
+          name: m.name,
+          score: m.revision_share || 0,
+          summary: `Made ${m.revision_count} edits (${m.revision_share}% of total saves).`,
+        });
       }
-
-      results.push({
-        email: member.email,
-        name: member.name,
-        score: parsed.score ?? member.revision_share ?? 0,
-        summary: parsed.summary || `Made ${member.revision_count} edits (${member.revision_share}% of total saves).`,
-        word_count: wordCount,
-      });
+    } else {
+      for (const m of activeMembers) {
+        const aiResult = parsed.find((r: any) => r.email === m.email);
+        results.push({
+          email: m.email,
+          name: m.name,
+          score: aiResult?.score ?? m.revision_share ?? 0,
+          summary: aiResult?.summary || `Made ${m.revision_count} edits (${m.revision_share}% of total saves).`,
+        });
+      }
     }
 
     return new Response(JSON.stringify({ results }), {
