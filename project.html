@@ -599,11 +599,16 @@
 
       const total = Object.values(revisionCounts).reduce((a, b) => a + b, 0);
 
+      console.log('Revision counts by email:', revisionCounts);
+      console.log('Profile emails:', profiles?.map(p => p.email));
+
       for (const member of members) {
         const email = profileMap[member.user_id]?.email;
         const count = email ? (revisionCounts[email] || 0) : 0;
         const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-        await dbClient.from('project_members').update({ contribution_pct: pct }).eq('id', member.id);
+        console.log(`Member ${email}: ${count} revisions = ${pct}%`);
+        const { error } = await dbClient.from('project_members').update({ contribution_pct: pct }).eq('id', member.id);
+        if (error) console.error('Update error for', email, error);
       }
 
       statusEl.style.color = '#4ade80';
