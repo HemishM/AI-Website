@@ -612,9 +612,9 @@
         statusEl.textContent = `Reading revisions from "${doc.name}"...`;
 
         try {
-          // Get revision list
+          // Get revision list with exportLinks
           const revRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,lastModifyingUser/emailAddress)&pageSize=200`,
+            `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,lastModifyingUser/emailAddress,exportLinks)&pageSize=200`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           const revData = await revRes.json();
@@ -626,15 +626,17 @@
             const email = rev.lastModifyingUser?.emailAddress;
             if (!email) continue;
 
-            // Export this revision as plain text
-            const exportRes = await fetch(
-              `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain&revisionId=${rev.id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            // Use exportLinks to download plain text for this revision
+            const exportUrl = rev.exportLinks?.['text/plain'];
+            if (!exportUrl) continue;
+
+            const exportRes = await fetch(exportUrl, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
             if (!exportRes.ok) continue;
             const currentText = await exportRes.text();
 
-            // Simple diff: find text in current that wasn't in previous
+            // Diff: characters added vs previous revision
             const added = currentText.length > prevText.length
               ? currentText.slice(prevText.length).trim()
               : '';
