@@ -74,7 +74,7 @@ Rules:
         "HTTP-Referer": "https://ai-website-seven-phi.vercel.app",
       },
       body: JSON.stringify({
-        model: "google/gemma-3-4b-it:free",
+        model: "nvidia/nemotron-3-nano-30b-a3b:free",
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -84,7 +84,11 @@ Rules:
 
     let parsed: any[] = [];
     const cleaned = raw.replace(/```json|```/g, '').trim();
-    try { parsed = JSON.parse(cleaned); } catch {
+    try {
+      const j = JSON.parse(cleaned);
+      // Handle both array and {results: [...]} formats
+      parsed = Array.isArray(j) ? j : (j.results || j.contributors || Object.values(j));
+    } catch {
       const match = raw.match(/\[[\s\S]*\]/);
       if (match) try { parsed = JSON.parse(match[0]); } catch {}
     }
