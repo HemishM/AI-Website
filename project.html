@@ -205,10 +205,22 @@
           </div>
         </div>
 
+        <!-- Assignment input -->
+        <div class="card mb-5">
+          <h3 class="text-white font-bold mb-3">Assignment</h3>
+          <p class="text-slate-400 text-xs mb-3">Describe your assignment so the AI can evaluate how relevant each person's contributions are.</p>
+          <textarea id="assignment-input" class="form-input" rows="3" placeholder="e.g. Write a 10-page marketing plan for a new product targeting Gen Z consumers, including market analysis, strategy, and budget." style="resize:vertical;"></textarea>
+          <button onclick="saveAssignment()" class="btn-ghost mt-3" style="font-size:12px; padding:7px 16px;">Save Assignment</button>
+          <span id="assignment-saved" style="display:none; color:#4ade80; font-size:12px; margin-left:10px;">Saved!</span>
+        </div>
+
         <div class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-white font-bold">Contribution Breakdown</h3>
-            <button id="sync-btn" onclick="syncContributions()" class="btn-primary" style="font-size:12px; padding:8px 16px;">Sync Contributions</button>
+            <div class="flex gap-2">
+              <button id="analyze-btn" onclick="analyzeContributions()" class="btn-ghost" style="font-size:12px; padding:8px 16px;">AI Analyze</button>
+              <button id="sync-btn" onclick="syncContributions()" class="btn-primary" style="font-size:12px; padding:8px 16px;">Sync Contributions</button>
+            </div>
           </div>
           <div id="sync-status" style="display:none; color:#93c5fd; font-size:12px; margin-bottom:12px;"></div>
           <div id="members-list">
@@ -355,6 +367,7 @@
       document.getElementById('proj-title').textContent = project.name;
       document.title = project.name + ' — CollabrAI';
       if (project.course) document.getElementById('proj-course').textContent = project.course;
+      if (project.assignment_description) document.getElementById('assignment-input').value = project.assignment_description;
 
       if (project.deadline) {
         const deadline = new Date(project.deadline);
@@ -427,7 +440,7 @@
                 <span style="color:${c.color};" class="text-sm font-semibold">${contrib}%</span>
               </div>
               <div class="progress-bar"><div class="progress-fill" style="width:${contrib}%;"></div></div>
-              <p class="text-slate-500 text-xs mt-1">${m.role || 'Member'}</p>
+              <p class="text-slate-500 text-xs mt-1">${m.ai_summary || m.role || 'Member'}</p>
             </div>
           </div>
         `;
@@ -527,6 +540,153 @@
         loadDocs();
       }
     });
+
+    async function saveAssignment() {
+      const text = document.getElementById('assignment-input').value.trim();
+      await dbClient.from('projects').update({ assignment_description: text }).eq('id', projectId);
+      const el = document.getElementById('assignment-saved');
+      el.style.display = 'inline';
+      setTimeout(() => { el.style.display = 'none'; }, 2000);
+    }
+
+    async function analyzeContributions() {
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const statusEl = document.getElementById('sync-status');
+      const assignment = document.getElementById('assignment-input').value.trim();
+
+      if (!assignment) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'Please enter an assignment description first.';
+        statusEl.style.display = 'block';
+        return;
+      }
+
+      analyzeBtn.textContent = 'Analyzing...';
+      analyzeBtn.disabled = true;
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#93c5fd';
+      statusEl.textContent = 'Fetching document revisions...';
+
+      const { data: { session } } = await dbClient.auth.getSession();
+      let token = session?.provider_token;
+      if (!token) {
+        const { data: profile } = await dbClient.from('profiles').select('google_access_token').eq('id', currentUser.id).single();
+        token = profile?.google_access_token;
+      }
+      if (!token) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'Google not connected. Go to Settings and reconnect.';
+        analyzeBtn.textContent = 'AI Analyze';
+        analyzeBtn.disabled = false;
+        return;
+      }
+
+      const { data: docs } = await dbClient.from('project_docs').select('*').eq('project_id', projectId);
+      if (!docs || docs.length === 0) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'No documents connected.';
+        analyzeBtn.textContent = 'AI Analyze';
+        analyzeBtn.disabled = false;
+        return;
+      }
+
+      const { data: members } = await dbClient.from('project_members').select('*').eq('project_id', projectId);
+      const userIds = (members || []).map(m => m.user_id).filter(Boolean);
+      const { data: profiles } = await dbClient.from('profiles').select('id, full_name, email').in('id', userIds);
+      const profileMap = {};
+      if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
+
+      // Collect text additions per email across all docs
+      const additionsByEmail = {};
+
+      for (const doc of docs) {
+        const fileId = doc.google_doc_id;
+        if (!fileId) continue;
+        statusEl.textContent = `Reading revisions from "${doc.name}"...`;
+
+        try {
+          // Get revision list
+          const revRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${fileId}/revisions?fields=revisions(id,lastModifyingUser/emailAddress)&pageSize=200`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const revData = await revRes.json();
+          const revisions = revData.revisions || [];
+
+          let prevText = '';
+          for (let i = 0; i < revisions.length; i++) {
+            const rev = revisions[i];
+            const email = rev.lastModifyingUser?.emailAddress;
+            if (!email) continue;
+
+            // Export this revision as plain text
+            const exportRes = await fetch(
+              `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain&revisionId=${rev.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!exportRes.ok) continue;
+            const currentText = await exportRes.text();
+
+            // Simple diff: find text in current that wasn't in previous
+            const added = currentText.length > prevText.length
+              ? currentText.slice(prevText.length).trim()
+              : '';
+
+            if (added) {
+              additionsByEmail[email] = (additionsByEmail[email] || '') + ' ' + added;
+            }
+            prevText = currentText;
+          }
+        } catch (err) {
+          console.error('Error reading doc', doc.name, err);
+        }
+      }
+
+      // Build member list with their additions
+      const memberData = (members || []).map(m => {
+        const profile = profileMap[m.user_id];
+        return {
+          email: profile?.email || '',
+          name: profile?.full_name || profile?.email || 'Unknown',
+          additions: additionsByEmail[profile?.email] || '',
+        };
+      });
+
+      statusEl.textContent = 'Sending to AI for analysis...';
+
+      const res = await fetch('https://pofmhobxednullgxtoah.supabase.co/functions/v1/analyze-contributions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ members: memberData, assignment })
+      });
+
+      const result = await res.json();
+      if (result.error) {
+        statusEl.style.color = '#f87171';
+        statusEl.textContent = 'AI error: ' + result.error;
+        analyzeBtn.textContent = 'AI Analyze';
+        analyzeBtn.disabled = false;
+        return;
+      }
+
+      // Update scores in DB and UI
+      const total = result.results.reduce((a, r) => a + (r.score || 0), 0);
+      for (const r of result.results) {
+        const member = members.find(m => profileMap[m.user_id]?.email === r.email);
+        if (!member) continue;
+        const pct = total > 0 ? Math.round((r.score / total) * 100) : 0;
+        await dbClient.from('project_members').update({
+          contribution_pct: pct,
+          ai_summary: r.summary
+        }).eq('id', member.id);
+      }
+
+      statusEl.style.color = '#4ade80';
+      statusEl.textContent = 'AI analysis complete!';
+      analyzeBtn.textContent = 'AI Analyze';
+      analyzeBtn.disabled = false;
+      await loadMembers();
+    }
 
     async function syncContributions() {
       const syncBtn = document.getElementById('sync-btn');
