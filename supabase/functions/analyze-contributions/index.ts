@@ -20,12 +20,12 @@ serve(async (req) => {
     const results = [];
 
     for (const member of members) {
-      if (!member.additions || member.additions.trim().length === 0) {
+      if (!member.revision_count || member.revision_count === 0) {
         results.push({
           email: member.email,
           name: member.name,
           score: 0,
-          summary: "No contributions detected in the document.",
+          summary: "No edits made to the document.",
           word_count: 0,
         });
         continue;
