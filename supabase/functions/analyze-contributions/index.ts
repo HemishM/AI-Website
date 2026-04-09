@@ -42,11 +42,12 @@ ${member.name}'s text additions to the document:
 ${member.additions.slice(0, 3000)}
 """
 
-Evaluate this contribution. Respond in JSON with exactly these fields:
-- score: number 0-100 representing how relevant and substantial the contribution is to the assignment
-- summary: one sentence describing what this person contributed and how relevant it is
+Evaluate this contribution. You MUST respond with ONLY a raw JSON object, no markdown, no code blocks, no explanation. Example format:
+{"score": 75, "summary": "Strong contributions to market analysis section, highly relevant to the assignment."}
 
-Only respond with valid JSON, no other text.`;
+Fields:
+- score: integer 0-100 for relevance and substance
+- summary: one sentence max`;
 
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -58,15 +59,19 @@ Only respond with valid JSON, no other text.`;
         body: JSON.stringify({
           model: "google/gemini-2.0-flash-exp:free",
           messages: [{ role: "user", content: prompt }],
-          response_format: { type: "json_object" },
         }),
       });
 
       const data = await res.json();
-      const content = data.choices?.[0]?.message?.content || "{}";
+      const raw = data.choices?.[0]?.message?.content || "{}";
+
+      // Strip markdown code blocks if present
+      const cleaned = raw.replace(/```json|```/g, '').trim();
 
       let parsed = {};
-      try { parsed = JSON.parse(content); } catch {}
+      try { parsed = JSON.parse(cleaned); } catch {
+        console.error("JSON parse failed for", member.email, "raw:", raw);
+      }
 
       results.push({
         email: member.email,
