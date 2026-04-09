@@ -431,13 +431,18 @@
         const initials = name.charAt(0).toUpperCase();
         const c = colors[i % colors.length];
         const contrib = m.contribution_pct || 0;
+        const isOwner = currentProject?.owner_id === currentUser.id;
+        const isSelf = m.user_id === currentUser.id;
         return `
           <div class="member-row">
             <div class="avatar" style="background:${c.bg}; color:${c.color};">${initials}</div>
             <div style="flex:1;">
               <div class="flex justify-between mb-1">
                 <span class="text-white text-sm font-medium">${name}</span>
-                <span style="color:${c.color};" class="text-sm font-semibold">${contrib}%</span>
+                <div class="flex items-center gap-2">
+                  <span style="color:${c.color};" class="text-sm font-semibold">${contrib}%</span>
+                  ${isOwner && !isSelf ? `<button onclick="removeMember('${m.id}', '${name}')" style="background:none; border:none; color:#475569; font-size:11px; cursor:pointer; padding:2px 6px; border-radius:4px;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#475569'">Remove</button>` : ''}
+                </div>
               </div>
               <div class="progress-bar"><div class="progress-fill" style="width:${contrib}%;"></div></div>
               <p class="text-slate-500 text-xs mt-1">${m.ai_summary || m.role || 'Member'}</p>
@@ -445,6 +450,12 @@
           </div>
         `;
       }).join('');
+    }
+
+    async function removeMember(memberId, name) {
+      if (!confirm(`Remove ${name} from this project?`)) return;
+      await dbClient.from('project_members').delete().eq('id', memberId);
+      await loadMembers();
     }
 
     async function loadDocs() {
