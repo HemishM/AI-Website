@@ -57,20 +57,18 @@ Fields:
           "HTTP-Referer": "https://ai-website-seven-phi.vercel.app",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "google/gemma-3-4b-it:free",
           messages: [{ role: "user", content: prompt }],
         }),
       });
 
       const data = await res.json();
       const raw = data.choices?.[0]?.message?.content || "{}";
-
-      // Strip markdown code blocks if present
       const cleaned = raw.replace(/```json|```/g, '').trim();
 
       let parsed = {};
       try { parsed = JSON.parse(cleaned); } catch {
-        console.error("JSON parse failed for", member.email, "raw:", raw);
+        console.error("JSON parse failed, raw:", raw);
       }
 
       results.push({
