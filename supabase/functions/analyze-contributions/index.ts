@@ -63,12 +63,22 @@ Fields:
       });
 
       const data = await res.json();
-      const raw = data.choices?.[0]?.message?.content || "{}";
-      const cleaned = raw.replace(/```json|```/g, '').trim();
+      const raw = data.choices?.[0]?.message?.content || "";
 
       let parsed = {};
-      try { parsed = JSON.parse(cleaned); } catch {
-        console.error("JSON parse failed, raw:", raw);
+      if (raw) {
+        // Try direct parse first
+        try { parsed = JSON.parse(raw.trim()); } catch {
+          // Strip markdown code blocks
+          const stripped = raw.replace(/```json|```/g, '').trim();
+          try { parsed = JSON.parse(stripped); } catch {
+            // Extract JSON object using regex
+            const match = raw.match(/\{[\s\S]*"score"[\s\S]*"summary"[\s\S]*\}/);
+            if (match) {
+              try { parsed = JSON.parse(match[0]); } catch {}
+            }
+          }
+        }
       }
 
       results.push({
