@@ -50,19 +50,19 @@ Here is what each student actually added to the document:
 
 ${memberList}
 
-Distribute exactly 100 percentage points among these contributors based on:
-1. How much of their added text is relevant to the assignment (primary factor)
-2. Their share of edits (secondary factor)
-3. Students who added mostly off-topic or irrelevant content should score significantly lower
+Scoring rules (apply strictly):
+1. Read each person's added text carefully
+2. Count only sentences that are DIRECTLY relevant to the assignment
+3. If someone added mostly personal stories, hobbies, or off-topic content, their score must be much lower than their edit share — even if they made many edits
+4. Someone who made 20% of edits but added 0% relevant content should score 0-5%
+5. Scores must sum to exactly 100
 
 You MUST respond with ONLY a raw JSON array, no markdown, no code blocks. Use "Member1", "Member2" etc.
 
-Example:
-[{"member":"Member1","score":70,"summary":"Added detailed market analysis and revenue model directly relevant to the business plan."},{"member":"Member2","score":30,"summary":"Added mostly off-topic personal content with one relevant sentence about pricing."}]
+Example where Member2 added off-topic content:
+[{"member":"Member1","score":90,"summary":"Added detailed market analysis and revenue model directly relevant to the assignment."},{"member":"Member2","score":10,"summary":"Added mostly off-topic personal content with only one relevant sentence about pricing strategy."}]
 
-Rules:
-- Scores must sum to exactly 100
-- summary is one sentence describing what they contributed and how relevant it is`;
+- summary must describe WHAT they actually wrote and HOW relevant it is`;
 
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
