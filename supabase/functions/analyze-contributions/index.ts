@@ -35,8 +35,8 @@ serve(async (req) => {
 
     const totalRevisions = activeMembers.reduce((a: number, m: any) => a + (m.revision_count || 0), 0);
 
-    const memberList = activeMembers.map((m: any) =>
-      `- ${m.name}: ${m.revision_count} edits (${m.revision_share}% of saves)`
+    const memberList = activeMembers.map((m: any, i: number) =>
+      `- Member${i+1} (${m.name}): ${m.revision_count} edits (${m.revision_share}% of saves)`
     ).join('\n');
 
     const docExcerpt = (activeMembers[0]?.additions || '').slice(0, 2500);
@@ -58,12 +58,14 @@ Distribute exactly 100 percentage points among the active contributors based on:
 2. How relevant the document content is to the assignment (secondary factor)
 3. Students who only added off-topic content should score lower than their edit share suggests
 
-You MUST respond with ONLY a raw JSON array, no markdown, no code blocks. Example for 2 students:
-[{"email":"a@b.com","score":70,"summary":"Led market analysis and revenue model sections."},{"email":"c@d.com","score":30,"summary":"Added introduction and bibliography."}]
+You MUST respond with ONLY a raw JSON array, no markdown, no code blocks. Use the exact member index numbers (Member1, Member2, etc.) in the "member" field.
+
+Example for 2 students:
+[{"member":"Member1","score":70,"summary":"Led market analysis and revenue model sections."},{"member":"Member2","score":30,"summary":"Added introduction and bibliography."}]
 
 Rules:
 - Scores must sum to exactly 100
-- Anyone with 0 edits is already excluded — do not include them
+- Use "Member1", "Member2" etc matching the list above
 - summary is one sentence per person`;
 
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -104,8 +106,10 @@ Rules:
         });
       }
     } else {
-      for (const m of activeMembers) {
-        const aiResult = parsed.find((r: any) => r.email === m.email);
+      for (let i = 0; i < activeMembers.length; i++) {
+        const m = activeMembers[i];
+        const key = `Member${i+1}`;
+        const aiResult = parsed.find((r: any) => r.member === key);
         results.push({
           email: m.email,
           name: m.name,
