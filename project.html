@@ -694,7 +694,7 @@
       }
 
       // Build member list with real per-person text additions
-      const totalRevisions = Object.values(revisionCountByEmail).reduce((a: number, b: any) => a + b, 0);
+      const totalRevisions = Object.values(revisionCountByEmail).reduce((a, b) => a + b, 0);
       const memberData = (members || []).map(m => {
         const profile = profileMap[m.user_id];
         const email = profile?.email || '';
