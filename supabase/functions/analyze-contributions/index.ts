@@ -103,7 +103,12 @@ serve(async (req) => {
         const aiScore = aiResult?.score ?? m.revision_share ?? 0;
         const summary = (aiResult?.summary || "").toLowerCase();
         const isOffTopic = summary.startsWith("off-topic") || summary.includes("off-topic");
-        const finalScore = isOffTopic ? Math.round(m.revision_share * 0.3) : aiScore;
+        const isPartial = summary.startsWith("partial contribution");
+        const finalScore = isOffTopic
+          ? Math.round(m.revision_share * 0.2)
+          : isPartial
+            ? Math.round(m.revision_share * 0.6)
+            : aiScore;
         aiScores.push({ m, finalScore, summary: aiResult?.summary });
       }
       const total = aiScores.reduce((a, s) => a + s.finalScore, 0);
